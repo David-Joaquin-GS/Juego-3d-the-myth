@@ -4,20 +4,28 @@ using UnityEngine;
 
 public class Movimiento_personaje : MonoBehaviour
 {
-    public float Speed = 1.0f;
-    public float RotationSpeed = 1.0f;
-    public float JumpForce = 1.0f;
+    public Camera camara;
+    public float speedH;
+    public float speedV;
+    public float rotMax;
+    public float rotMin;
+    float ejeV, ejeH;
 
-    private Rigidbody Physics;
+    CharacterController CC;
+    public float runSpeed;
+    public float speedMovimiento;
+    public float jump;
+    public float gravity;
+
+    private Vector3 movimiento = Vector3.zero;
+    
+     
 
     // Start is called before the first frame update
     void Start()
     {
-
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
-        Physics = GetComponent<Rigidbody>();
+        CC = GetComponent<CharacterController>();
+        Cursor.lockState = CursorLockMode.Locked; 
         
     }
 
@@ -25,21 +33,32 @@ public class Movimiento_personaje : MonoBehaviour
     void Update()
     {
 
-        float horizontal = Input.GetAxis("Horizontal");
-        float vertical = Input.GetAxis("Vertical");
+        ejeH = speedH * Input.GetAxis("Mouse X");
+        ejeV += speedV * Input.GetAxis("Mouse Y");
 
-        transform.Translate(new Vector3(horizontal, 0.0f, vertical) * Time.deltaTime * Speed);
+        camara.transform.localEulerAngles = new Vector3(-ejeV, 0, 0);
+        transform.Rotate(0, ejeH, 0);
+        ejeV = Mathf.Clamp(ejeV, rotMin, rotMax);
 
-        float rotationY = Input.GetAxis("Mouse X");
-
-        transform.Rotate(new Vector3(0, rotationY * Time.deltaTime * RotationSpeed));
-
-        if (Input.GetKeyDown(KeyCode.Space))
+        if(CC.isGrounded)
         {
-
-            Physics.AddForce(new Vector3(0, JumpForce, 0), ForceMode.Impulse);
-
+            movimiento = new Vector3(Input.GetAxis("Horizontal"), 0.0f, Input.GetAxis("Vertical"));
+            
+            if (Input.GetKey(KeyCode.LeftShift))
+           
+                movimiento = transform.TransformDirection(movimiento) * runSpeed;
+            else
+                movimiento = transform.TransformDirection(movimiento) * speedMovimiento;
+            
+            //salto sin movimiento fijo// 
+            if (Input.GetKey(KeyCode.Space))
+            
+                movimiento.y = jump;
+            
         }
+
+        movimiento.y -= gravity * Time.deltaTime;
+        CC.Move(movimiento * Time.deltaTime);
 
     }
 }
